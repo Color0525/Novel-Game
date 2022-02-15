@@ -1,0 +1,2 @@
+FadeImage,m_actor1,FadeIn,1+FadeImage,m_actor2,FadeIn,1 
+ShowMessagesAsync,大鳥こはく,AAAAAAA/BBBBBBBBBBBBB/CCCCCCCCCC,0.2
