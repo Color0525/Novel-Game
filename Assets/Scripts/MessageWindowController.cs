@@ -13,6 +13,8 @@ public class MessageWindowController : MonoBehaviour
 
     [SerializeField] TextMeshProUGUI m_captionView = default;
     [SerializeField] TextMeshProUGUI m_messageView = default;
+    [SerializeField] GameObject m_choicesPrefab = default;
+    [SerializeField] Transform m_choicesView = default;
     //[SerializeField] string[] m_messageData = default;
     //[SerializeField] float m_charSecond = 1;
     //bool m_requestNext = false;
@@ -23,6 +25,7 @@ public class MessageWindowController : MonoBehaviour
     [SerializeField] Image m_actor2 = default;
     [SerializeField] Image m_background1 = default;
     [SerializeField] Image m_background2 = default;
+
     //CancellationTokenSource m_cs = default;
     //bool m_isMessageNext = false;
     Process m_process = default; //メンバ変数にしたくない///////////////////////////////
@@ -70,8 +73,8 @@ public class MessageWindowController : MonoBehaviour
         //        ShowMessagesAsync(new string[]{ "AAAAAAA","BBBBBBBBBBBBB","CCCCCCCCCC", } ,m_messageView, 0.2f, m_cs.Token),
         //    }),
         //});
-        Scenario scenario = CreateScenario(m_textAsset.text);
-        StartCoroutine(PlayScenario(scenario));
+        //Scenario scenario = CreateScenario(m_textAsset.text);
+        StartCoroutine(PlayScenario(m_textAsset.text));
     }
 
     private void Update()
@@ -91,40 +94,40 @@ public class MessageWindowController : MonoBehaviour
         //}
     }
 
-    
 
-    private Scenario CreateScenario(string scenarioText)//コンストラクタにする？////////////////////////////////////////////
-    {
-        Scenario scenario = new Scenario();
-        string[] scenarioData = scenarioText.Split('\n');
-        foreach (var processText in scenarioData)
-        {
-            Process process = new Process();
-            string[] eData = processText.Split('+');
-            foreach (var eText in eData)
-            {
-                string[] data = eText.Split(',');
-                IEnumerator e = default;
 
-                if (data[0] == "FadeImage")//FadeImage,m_actor1,FadeIn,1
-                {
-                    e = FadeImage(ConvertImage(data[1]), ConvertFadeType(data[2]), int.Parse(data[3]), process);
-                }
-                else if (data[0] == "ShowMessagesAsync")//ShowMessagesAsync,大鳥こはく,AAAAAAA/BBBBBBBBBBBBB/CCCCCCCCCC",0.2
-                {
-                    e = ShowMessagesAsync(data[1], m_captionView, ConvertStrings(data[2]), m_messageView, float.Parse(data[3]), process);
-                }
-                else
-                {
-                    Debug.Log("指定した関数が見つかりません");
-                }
+    //private Scenario CreateScenario(string scenarioText)//コンストラクタにする？////////////////////////////////////////////
+    //{
+    //    Scenario scenario = new Scenario();
+    //    string[] scenarioData = scenarioText.Split('\n');
+    //    foreach (var processText in scenarioData)
+    //    {
+    //        Process process = new Process();
+    //        string[] eData = processText.Split('+');
+    //        foreach (var eText in eData)
+    //        {
+    //            string[] data = eText.Split(',');
+    //            IEnumerator e = default;
 
-                process.ProcessData.Add(e);
-            }
-            scenario.ScenarioData.Add(process);
-        }
-        return scenario;
-    }
+    //            if (data[0] == "FadeImage")//FadeImage,m_actor1,FadeIn,1
+    //            {
+    //                e = FadeImage(ConvertImage(data[1]), ConvertFadeType(data[2]), int.Parse(data[3]), process);
+    //            }
+    //            else if (data[0] == "ShowMessagesAsync")//ShowMessagesAsync,大鳥こはく,AAAAAAA/BBBBBBBBBBBBB/CCCCCCCCCC",0.2
+    //            {
+    //                e = ShowMessagesAsync(data[1], m_captionView, ConvertStrings(data[2]), m_messageView, float.Parse(data[3]), process);
+    //            }
+    //            else
+    //            {
+    //                Debug.Log("指定した関数が見つかりません");
+    //            }
+
+    //            process.ProcessData.Add(e);
+    //        }
+    //        scenario.ScenarioData.Add(process);
+    //    }
+    //    return scenario;
+    //}
     private Image ConvertImage(string data)
     {
         if (data == "m_actor1")
@@ -134,6 +137,14 @@ public class MessageWindowController : MonoBehaviour
         else if (data == "m_actor2")
         {
             return m_actor2;
+        }
+        else if (data == "m_background1")
+        {
+            return m_background1;
+        }
+        else if (data == "m_background2")
+        {
+            return m_background2;
         }
         else
         {
@@ -145,9 +156,13 @@ public class MessageWindowController : MonoBehaviour
     {
         return (FadeType)Enum.Parse(typeof(FadeType), data);
     }
-    private string[] ConvertStrings(string data)
+    private string[] ConvertTexts(string data)
     {
         return data.Split('/');
+    }
+    private int[] ConvertNumbers(string data)
+    {
+        return data.Split('/').Select(int.Parse).ToArray();
     }
     enum FadeType
     {
@@ -157,22 +172,74 @@ public class MessageWindowController : MonoBehaviour
     }
 
     //シナリオデータの実行
-    private IEnumerator PlayScenario(Scenario scenario)
+    private IEnumerator PlayScenario(string scenarioText)
     {
-        foreach (var process in scenario.ScenarioData)
+        //Scenario scenario = new Scenario();
+        string[] scenarioData = scenarioText.Split('\n');
+        for (int i = 0; i < scenarioData.Length; i++)
+        //foreach (var processText in scenarioData)
         {
-            m_process = process;//クリック監視用のコルーチンでUpdate(){if (Input.GetMouseButtonDown(0))を取るようにしたい/////////////
-            if (process.ProcessData.Count > 1)
+            Process process = new Process();
+            string[] eData = scenarioData[i].Split('+');
+            foreach (var eText in eData)
             {
-                yield return WaitAllAsync(process);//同時実行
+                string[] data = eText.Split(',');
+                IEnumerator e = default;
+
+                if (data[0] == "FadeImage")//FadeImage,m_actor1,FadeIn,1
+                {
+                    e = FadeImage(ConvertImage(data[1]), ConvertFadeType(data[2]), float.Parse(data[3]), process);
+                }
+                else if (data[0] == "ShowMessagesAsync")//ShowMessagesAsync,大鳥こはく,AAAAAAA/BBBBBBBBBBBBB/CCCCCCCCCC",0.2
+                {
+                    e = ShowMessagesAsync(data[1], m_captionView, ConvertTexts(data[2]), m_messageView, float.Parse(data[3]), process);
+                }
+                else if (data[0] == "ChoicesMessage")
+                {
+                    e = ChoicesMessage(ConvertTexts(data[1]), ConvertNumbers(data[2]), m_choicesPrefab, m_choicesView, (int x) => LineChange(out i, x));
+                }
+                else if (data[0] == "LineChange")
+                {
+                    LineChange(out i, int.Parse(data[1]));
+                    continue;
+                }
+                else
+                {
+                    Debug.Log("指定した関数が見つかりません");
+                }
+                process.ProcessData.Add(e);
             }
-            else
+            m_process = process;
+            if (process.ProcessData.Count == 1)
             {
                 yield return StartCoroutine(process.ProcessData.First());
             }
+            else if (process.ProcessData.Count > 1)
+            {
+                yield return WaitAllAsync(process);//同時実行
+            }
             yield return null;
+
+            //scenario.ScenarioData.Add(process);
         }
-        yield return null;
+        //return scenario;
+
+
+
+        //foreach (var process in scenario.ScenarioData)
+        //{
+        //    m_process = process;//クリック監視用のコルーチンでUpdate(){if (Input.GetMouseButtonDown(0))を取るようにしたい/////////////
+        //    if (process.ProcessData.Count > 1)
+        //    {
+        //        yield return WaitAllAsync(process);//同時実行
+        //    }
+        //    else
+        //    {
+        //        yield return StartCoroutine(process.ProcessData.First());
+        //    }
+        //    yield return null;
+        //}
+        //yield return null;
     }
 
     // いずれかが終わるまで
@@ -244,6 +311,7 @@ public class MessageWindowController : MonoBehaviour
 
             bool isCancel = false;
             process.AddSkipEvent(() => isCancel = true);
+
             while (!isCancel) { yield return null; }
             yield return null;
         }
@@ -275,13 +343,42 @@ public class MessageWindowController : MonoBehaviour
         }
     }
 
+    static IEnumerator ChoicesMessage(string[] texts, int[] lineNums, GameObject choicesPrefab, Transform choicesView, Action<int> action)
+    {
+        bool isCancel = false;
+
+        choicesView.gameObject.SetActive(true);
+        for (int i = 0; i < texts.Length; i++)
+        {
+            GameObject go = Instantiate(choicesPrefab, choicesView);
+            go.GetComponentInChildren<Text>().text = texts[i];
+            int x = lineNums[i];
+            go.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                isCancel = true;
+                action(x);
+            });
+        }
+
+        while (!isCancel) { yield return null; }
+
+        choicesView.gameObject.SetActive(false);
+        foreach (Transform child in choicesView) Destroy(child.gameObject);
+        yield return null;
+    }
+
+    void LineChange(out int counter, int newLineNum)
+    {
+        counter = newLineNum - 2;
+    }
+
+
     //キャラクターの表情変更
     //キャラクターの強調表示
     //BGMを流す、止める
     //効果音を流す
     //ボイスを流す
     //オート再生機能のON、OFF
-    //選択肢によるシナリオ変化の流れ制御（イベントを行で識別し、forのi(実行行)を指定行の番号に変える処理をする）
 
 
 

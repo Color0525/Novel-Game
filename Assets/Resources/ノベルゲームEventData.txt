@@ -1,2 +1,11 @@
-FadeImage,m_actor1,FadeIn,1+FadeImage,m_actor2,FadeIn,1 
-ShowMessagesAsync,大鳥こはく,AAAAAAA/BBBBBBBBBBBBB/CCCCCCCCCC,0.2
+ShowMessagesAsync, ,Test Message/Start,0.3
+FadeImage,m_actor1,FadeIn,1+FadeImage,m_actor2,FadeIn,2
+ShowMessagesAsync,Kohaku,Let's play together!,0.1
+ChoicesMessage,Yes/No,5/7
+ShowMessagesAsync,Kohaku,Thank you!,0.1
+LineChange,10
+FadeImage,m_background2,FadeIn,0.5+ShowMessagesAsync,Kohaku,What?!,0.1
+FadeImage,m_background2,FadeOut,0.1
+LineChange,3
+FadeImage,m_actor1,FadeOut,1+FadeImage,m_actor2,FadeOut,2
+ShowMessagesAsync, ,Test Message/End,0.3
